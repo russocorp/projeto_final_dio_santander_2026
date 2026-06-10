@@ -30,7 +30,7 @@ impl App {
 
 #[tracing::instrument]
 async fn hello_world() -> &'static str {
-    "Hello, World!"
+    "Hello, World!!!"
 }
 
 #[tracing::instrument]
@@ -41,5 +41,5 @@ async fn ping() -> String {
         .unwrap();
     // Ou formato personalizado:
     // let formatado = agora.format(&time::macros::format_description!("[year]-[month]-[day] [hour]:[minute]")).unwrap();
-    format!("pong! {}", formatado)
+    format!("PONG! {}", formatado)
 }
