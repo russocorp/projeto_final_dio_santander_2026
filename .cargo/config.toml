@@ -1,0 +1,7 @@
+[build]
+incremental = true
+
+[profile.dev]
+incremental = true
+opt-level = 0
+debug = 1
