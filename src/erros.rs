@@ -14,6 +14,8 @@ pub enum AppError {
     Unauthorized,
     #[error("Erro interno do servidor")]
     InternalServerError,
+    #[error(transparent)]
+    DatabaseError(#[from] sqlx::Error),
 }
 #[derive(Serialize)]
 pub struct ErrorResponse {
@@ -32,7 +34,9 @@ impl IntoResponse for AppError {
             }
             Self::NotFound => axum::http::StatusCode::NOT_FOUND,
             Self::Unauthorized => axum::http::StatusCode::FORBIDDEN,
-            Self::InternalServerError => axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            Self::InternalServerError | Self::DatabaseError(_) => {
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR
+            }
         };
 
         (status, Json(response).into_response()).into_response()

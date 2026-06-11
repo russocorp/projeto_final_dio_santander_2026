@@ -2,58 +2,51 @@ use crate::app::AppState;
 use crate::auth::admin::Admin;
 use crate::erros::AppError;
 use crate::models::moedas::{Moeda, MoedaCreate, MoedaUpdate};
-use axum::{Json, Router, extract::State, routing::get};
+use crate::repositorio::Repositorio;
+use axum::extract::Path;
+use axum::{Json, Router, routing::get, routing::patch};
 
 pub fn router() -> Router<AppState> {
-    Router::new().route(
-        "/moedas",
-        get(get_moedas).post(post_moedas).patch(patch_moedas),
-    )
+    Router::new()
+        .route("/moedas", get(get_moedas).post(post_moedas))
+        .route("/moedas/{id}", get(get_moeda).patch(patch_moedas))
 }
 
 #[tracing::instrument(skip_all)]
-async fn get_moedas(state: State<AppState>) -> Json<Vec<Moeda>> {
-    let _moedas = state.moedas.lock().await;
+async fn get_moeda(repositorio: Repositorio, Path(id): Path<i32>) -> Result<Json<Moeda>, AppError> {
+    match repositorio.get_moeda(id).await? {
+        Some(moeda) => Ok(Json(moeda)),
+        None => Err(AppError::NotFound),
+    }
+}
 
-    Json(_moedas.values().cloned().collect())
+#[tracing::instrument(skip_all)]
+async fn get_moedas(repositorio: Repositorio) -> Result<Json<Vec<Moeda>>, AppError> {
+    let _moedas = repositorio.get_moedas().await?;
+
+    Ok(Json(_moedas))
 }
 
 #[tracing::instrument(skip_all)]
 async fn post_moedas(
     _admin: Admin,
-    state: State<AppState>,
+    repositorio: Repositorio,
     Json(request): Json<MoedaCreate>,
-) -> Json<Moeda> {
-    let mut _moedas = state.moedas.lock().await;
+) -> Result<Json<Moeda>, AppError> {
+    let nova_moeda = repositorio.create_moeda(request).await?;
 
-    let _id = _moedas.values().map(|m| m.id).max().unwrap_or(0) + 1;
-
-    let nova_moeda = Moeda {
-        id: _id,
-        nome: request.nome,
-        simbolo: request.simbolo,
-        valor: request.valor,
-    };
-
-    _moedas.insert(_id, nova_moeda.clone());
-
-    Json(nova_moeda)
+    Ok(Json(nova_moeda))
 }
 
 #[tracing::instrument(skip_all)]
 async fn patch_moedas(
     _admin: Admin,
-    state: State<AppState>,
+    repositorio: Repositorio,
+    Path(id): Path<i32>,
     Json(request): Json<MoedaUpdate>,
 ) -> Result<Json<Moeda>, AppError> {
-    let mut _moedas = state.moedas.lock().await;
-
-    let Some(moeda_alterar) = _moedas.get_mut(&request.id) else {
-        return Err(AppError::NotFound);
-    };
-
-    moeda_alterar.nome = request.nome.clone();
-    moeda_alterar.simbolo = request.simbolo.clone();
-    moeda_alterar.valor = request.valor;
-    Ok(Json(moeda_alterar.clone()))
+    match repositorio.update_moeda(id, request).await? {
+        Some(moeda_atualizada) => Ok(Json(moeda_atualizada)),
+        None => Err(AppError::NotFound),
+    }
 }

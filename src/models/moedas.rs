@@ -1,24 +1,24 @@
+use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, sqlx::FromRow)]
 pub struct Moeda {
     pub id: i32,
     pub nome: String,
     pub simbolo: String,
-    pub valor: f64,
+    pub valor: BigDecimal,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, sqlx::FromRow)]
 pub struct MoedaUpdate {
-    pub id: i32,
-    pub nome: String,
-    pub simbolo: String,
-    pub valor: f64,
+    pub nome: Option<String>,
+    pub simbolo: Option<String>,
+    pub valor: Option<BigDecimal>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, sqlx::FromRow)]
 pub struct MoedaCreate {
     pub nome: String,
     pub simbolo: String,
-    pub valor: f64,
+    pub valor: BigDecimal,
 }

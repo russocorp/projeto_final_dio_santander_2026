@@ -1,7 +1,7 @@
 create table if not exists moedas (
     id serial not null,
     nome text not null unique,
-    simbolo varchar(10) not null unique,
+    simbolo varchar(10) not null,
     valor decimal(20, 10) not null,
     inclusao_data timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	alteracao_data timestamp NULL,

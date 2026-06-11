@@ -1,18 +1,16 @@
 use axum::Router;
 use sqlx::PgPool;
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::{net::TcpListener, sync::Mutex};
+
+use tokio::net::TcpListener;
 use tracing::info;
 use tracing_subscriber::{
     Layer, fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt,
 };
 
-use crate::{models::moedas::Moeda, rotas};
+use crate::rotas;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub moedas: Arc<Mutex<HashMap<i32, Moeda>>>,
     pub db: PgPool,
 }
 
@@ -20,10 +18,7 @@ impl AppState {
     async fn new() -> color_eyre::Result<Self> {
         let database_url = std::env::var("DATABASE_URL")?;
         let db = PgPool::connect(&database_url).await?;
-        Ok(Self {
-            moedas: Default::default(),
-            db,
-        })
+        Ok(Self { db })
     }
 }
 
@@ -35,6 +30,7 @@ impl App {
             .boxed();
 
         tracing_subscriber::registry().with(layer).init();
+        dotenvy::dotenv()?;
 
         info!("Iniciando serviço...");
 
