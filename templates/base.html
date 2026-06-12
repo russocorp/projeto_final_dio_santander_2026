@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %} - RR Sistemas{% endblock %}</title>
+  
+  <!-- Tailwind CSS v4 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  
+  <link rel="icon" type="image/png" href="/assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+  
+  <style>
+    input:focus {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+      border-color: #3b82f6;
+      outline: none;
+    }
+  </style>
+  
+  <!-- Caso alguma página precise de scripts/estilos extras no head -->
+  {% block head %}{% endblock %}
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-gray-100 font-sans antialiased min-h-screen flex items-center justify-center px-4 py-8">
+
+  <!-- O conteúdo específico de cada página entra aqui -->
+  {% block conteudo %}{% endblock %}
+
+</body>
+</html>

@@ -16,7 +16,7 @@ async fn ping() -> String {
             "[year]-[month]-[day] [hour]:[minute]:[second]"
         ))
         .unwrap();
-    format!("PONG! {}", formatado)
+    format!("PONG - {}", formatado)
 }
 
 #[tracing::instrument(skip_all)]

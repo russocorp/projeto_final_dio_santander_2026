@@ -1,4 +1,4 @@
-use axum::response::{IntoResponse, Json};
+use axum::response::{IntoResponse, Json, Response};
 use serde::Serialize;
 use thiserror::Error;
 
@@ -10,12 +10,20 @@ pub enum AppError {
     InvalidCredentials,
     #[error("Não encontrado")]
     NotFound,
+    #[error("Usuário não encontrado")]
+    UsuarioInexistente,
     #[error("Não autorizado")]
     Unauthorized,
+    #[error("Senha incorreta")]
+    SenhaIncorreta,
     #[error("Erro interno do servidor")]
     InternalServerError,
     #[error(transparent)]
     DatabaseError(#[from] sqlx::Error),
+    #[error("Nome de usuário já existe")]
+    UsuarioDuplicado,
+    #[error(transparent)]
+    Template(#[from] askama::Error),
 }
 #[derive(Serialize)]
 pub struct ErrorResponse {
@@ -23,18 +31,19 @@ pub struct ErrorResponse {
 }
 
 impl IntoResponse for AppError {
-    fn into_response(self) -> axum::response::Response {
+    fn into_response(self) -> Response {
         let error_message = self.to_string();
         let response = ErrorResponse {
             error: error_message,
         };
         let status = match self {
-            Self::MissingAuthorization | Self::InvalidCredentials => {
+            Self::UsuarioDuplicado => axum::http::StatusCode::BAD_REQUEST,
+            Self::MissingAuthorization | Self::InvalidCredentials | Self::SenhaIncorreta => {
                 axum::http::StatusCode::UNAUTHORIZED
             }
-            Self::NotFound => axum::http::StatusCode::NOT_FOUND,
+            Self::NotFound | Self::UsuarioInexistente => axum::http::StatusCode::NOT_FOUND,
             Self::Unauthorized => axum::http::StatusCode::FORBIDDEN,
-            Self::InternalServerError | Self::DatabaseError(_) => {
+            Self::InternalServerError | Self::DatabaseError(_) | Self::Template(_) => {
                 axum::http::StatusCode::INTERNAL_SERVER_ERROR
             }
         };

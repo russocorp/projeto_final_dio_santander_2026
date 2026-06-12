@@ -1,13 +1,13 @@
 use axum::Router;
 use sqlx::PgPool;
-
 use tokio::net::TcpListener;
+use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
 use tracing_subscriber::{
     Layer, fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt,
 };
 
-use crate::rotas;
+use crate::{frontend, rotas};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -42,6 +42,13 @@ impl App {
             //Rotas para verificar se tá rodando a API
             .merge(rotas::index::router())
             .nest("/api", rotas::api::router())
+            .merge(frontend::login::router())
+            .merge(frontend::registrar::router())
+            .route_service(
+                "/favicon.png",
+                ServeFile::new("assets/image/favicon-32x32.png"),
+            )
+            .nest_service("/assets", ServeDir::new("assets"))
             .with_state(state);
         axum::serve(listener, router).await?;
 

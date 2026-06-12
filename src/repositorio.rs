@@ -1,15 +1,28 @@
-use std::convert::Infallible;
-
 use axum::extract::FromRequestParts;
 use sqlx::PgPool;
+use std::convert::Infallible;
 
 use crate::{
     app::AppState,
-    models::moedas::{Moeda, MoedaCreate, MoedaUpdate},
+    models::moeda::{Moeda, MoedaCreate, MoedaUpdate},
+    models::usuario::{Usuario, UsuarioCreate},
 };
 
 pub struct Repositorio {
     db: PgPool,
+}
+
+impl FromRequestParts<AppState> for Repositorio {
+    type Rejection = Infallible;
+
+    async fn from_request_parts(
+        _parts: &mut axum::http::request::Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        Ok(Self {
+            db: state.db.clone(),
+        })
+    }
 }
 
 impl Repositorio {
@@ -76,17 +89,41 @@ impl Repositorio {
 
         Ok(moeda_atualizada)
     }
-}
 
-impl FromRequestParts<AppState> for Repositorio {
-    type Rejection = Infallible;
+    pub async fn create_usuario(
+        &self,
+        _hashed_password: String,
+        usuario: &UsuarioCreate,
+    ) -> sqlx::Result<Usuario> {
+        let novo_usuario = sqlx::query_as!(
+            Usuario,
+            "INSERT INTO usuarios (nome, user_name, hashed_password, is_admin, inclusao_usuario)
+            VALUES ($1, $2, $3, $4, 'SISTEMA')
+            RETURNING id, nome, user_name, hashed_password, is_admin
+            ",
+            usuario.nome,
+            usuario.user_name,
+            _hashed_password,
+            usuario.is_admin
+        )
+        .fetch_one(&self.db)
+        .await?;
 
-    async fn from_request_parts(
-        _parts: &mut axum::http::request::Parts,
-        state: &AppState,
-    ) -> Result<Self, Self::Rejection> {
-        Ok(Self {
-            db: state.db.clone(),
-        })
+        Ok(novo_usuario)
+    }
+
+    pub async fn get_usuario_user_name(&self, user_name: &String) -> sqlx::Result<Option<Usuario>> {
+        let usuario = sqlx::query_as!(
+            Usuario,
+            "SELECT id, nome, user_name, hashed_password, is_admin
+            FROM usuarios
+            WHERE user_name = $1
+            ",
+            user_name
+        )
+        .fetch_optional(&self.db)
+        .await?;
+
+        Ok(usuario)
     }
 }

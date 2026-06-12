@@ -1,10 +1,10 @@
 use crate::app::AppState;
 use crate::auth::admin::Admin;
 use crate::erros::AppError;
-use crate::models::moedas::{Moeda, MoedaCreate, MoedaUpdate};
+use crate::models::moeda::{Moeda, MoedaCreate, MoedaUpdate};
 use crate::repositorio::Repositorio;
 use axum::extract::Path;
-use axum::{Json, Router, routing::get, routing::patch};
+use axum::{Json, Router, routing::get};
 
 pub fn router() -> Router<AppState> {
     Router::new()

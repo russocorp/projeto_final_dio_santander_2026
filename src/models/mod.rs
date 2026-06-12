@@ -1,1 +1,2 @@
-pub mod moedas;
+pub mod moeda;
+pub mod usuario;
