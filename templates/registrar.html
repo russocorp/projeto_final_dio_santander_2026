@@ -2,6 +2,8 @@
 {% import "componentes.html" as comp %}
 
 {% block title %}Registrar{% endblock %}
+{% block body %}class="bg-gradient-to-br from-gray-100 to-gray-400 font-sans antialiased min-h-screen flex items-center
+justify-center px-4 py-8"{% endblock %}
 
 {% block conteudo %}
 <div class="flex justify-center">
@@ -12,13 +14,13 @@
                 <label for="nome" class="block mb-2 text-sm font-medium">Nome</label>
                 <input type="name" id="nome" name="nome"
                     class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full py-2.5 px-4"
-                    placeholder="seu nome" required value="">
+                    placeholder="seu nome" required value="{% if let Some(v) = old_nome %}{{ v }}{% endif %}">
             </div>
             <div class="mb-4">
                 <label for="user_name" class="block mb-2 text-sm font-medium">Usuário</label>
                 <input type="user" id="user_name" name="user_name"
                     class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full py-2.5 px-4"
-                    placeholder="usuario" required value="">
+                    placeholder="usuario" required value="{% if let Some(v) = old_user_name %}{{ v }}{% endif %}">
             </div>
             <div class="mb-4">
                 <label for="password" class="block mb-2 text-sm font-medium">Senha</label>

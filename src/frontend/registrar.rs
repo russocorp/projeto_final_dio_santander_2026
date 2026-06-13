@@ -5,6 +5,7 @@ use axum::{
     response::{Html, IntoResponse, Redirect},
     routing::{get, post},
 };
+use axum_extra::extract::{CookieJar, cookie::Cookie};
 use serde::Deserialize;
 
 use crate::{
@@ -23,6 +24,8 @@ pub fn router() -> Router<AppState> {
 #[template(path = "registrar.html")]
 struct RegistrarPage {
     error_message: Option<String>,
+    old_nome: Option<String>,
+    old_user_name: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -32,7 +35,6 @@ struct RegistrarPayload {
     password: String,
 }
 
-// Rota GET: Exibe a página de login limpa (sem erros)
 async fn registrar(usuario_logado: Option<UsuarioLogado>) -> Result<impl IntoResponse, AppError> {
     if usuario_logado.is_some() {
         return Ok(Redirect::to("/").into_response());
@@ -40,25 +42,20 @@ async fn registrar(usuario_logado: Option<UsuarioLogado>) -> Result<impl IntoRes
 
     let template = RegistrarPage {
         error_message: None,
+        old_nome: None,
+        old_user_name: None,
     };
 
     match template.render() {
         Ok(html) => return Ok(Html(html).into_response()),
         Err(_) => Err(AppError::InternalServerError),
     }
-
-    /*Ok(Html(
-        RegistrarPage {
-            error_message: None,
-        }
-        .render()
-        .unwrap_or_else(|_| "Erro ao renderizar página".into()),
-    ));*/
 }
 
 // Rota POST: Processa as credenciais e retorna Result<(), AuthError>
 async fn post_registrar(
     repositorio: Repositorio,
+    jar: CookieJar,
     Form(payload): Form<RegistrarPayload>,
 ) -> impl IntoResponse {
     // Implementação simples para criar um usuário do tipo administrador.
@@ -77,6 +74,8 @@ async fn post_registrar(
         // Renderiza o template de login injetando a mensagem de erro específica
         let template = RegistrarPage {
             error_message: Some(mensagem),
+            old_nome: Some(usuario_criar.nome),
+            old_user_name: Some(usuario_criar.user_name),
         };
 
         let status = match err {
@@ -93,5 +92,10 @@ async fn post_registrar(
                 .into_response(),
         };
     }
-    Redirect::to("/login").into_response()
+
+    let cookie = Cookie::build(("flash", "Usuário Cadastrado com Sucesso!"))
+        .path("/")
+        .http_only(true);
+
+    (jar.add(cookie), Redirect::to("/login")).into_response()
 }

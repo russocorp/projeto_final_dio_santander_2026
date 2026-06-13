@@ -2,6 +2,10 @@
 {% import "componentes.html" as comp %}
 
 {% block title %}Login{% endblock %}
+{% block body %}class="bg-gradient-to-br from-gray-100 to-gray-400 font-sans antialiased min-h-screen flex items-center
+justify-center
+px-4 py-8"{% endblock %}
+
 
 {% block conteudo %}
 <div class="flex justify-center">
@@ -12,7 +16,7 @@
                 <label for="user_name" class="block mb-2 text-sm font-medium">Usuário</label>
                 <input type="user" id="user_name" name="user_name"
                     class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full py-2.5 px-4"
-                    placeholder="usuario" required value="">
+                    placeholder="usuario" required value="{% if let Some(v) = old_user_name %}{{ v }}{% endif %}">
             </div>
             <div class="mb-4">
                 <label for="password" class="block mb-2 text-sm font-medium">Senha</label>
@@ -29,6 +33,19 @@
                             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>{{ error_msg }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if let Some(ok_msg) = ok_message %}
+            <div class="mb-5 p-3 bg-green-50 border-l-4 border-green-500 rounded-xl text-green-700 text-sm shadow-sm">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 mr-2 flex-shrink-0 text-green-500" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{{ ok_msg }}</span>
                 </div>
             </div>
             {% endif %}

@@ -6,7 +6,6 @@ use axum::{
     routing::{get, post},
 };
 use axum_extra::extract::{CookieJar, cookie::Cookie};
-use jwt_simple::token;
 use serde::Deserialize;
 
 use crate::{
@@ -25,6 +24,8 @@ pub fn router() -> Router<AppState> {
 #[template(path = "login.html")]
 struct LoginPage {
     error_message: Option<String>,
+    ok_message: Option<String>,
+    old_user_name: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -34,17 +35,29 @@ struct LoginPayload {
 }
 
 // Rota GET: Exibe a página de login limpa (sem erros)
-async fn login(usuario_logado: Option<UsuarioLogado>) -> Result<impl IntoResponse, AppError> {
+async fn login(
+    usuario_logado: Option<UsuarioLogado>,
+    jar: CookieJar,
+) -> Result<impl IntoResponse, AppError> {
     if usuario_logado.is_some() {
         return Ok(Redirect::to("/").into_response());
     }
+    let flash = jar.get("flash").map(|c| c.value().to_string());
 
     let template = LoginPage {
         error_message: None,
+        ok_message: flash.clone(),
+        old_user_name: None,
+    };
+
+    let jar = if flash.is_some() {
+        jar.remove(Cookie::from("flash"))
+    } else {
+        jar
     };
 
     match template.render() {
-        Ok(html) => return Ok(Html(html).into_response()),
+        Ok(html) => Ok((jar, Html(html)).into_response()),
         Err(_) => Err(AppError::InternalServerError),
     }
 }
@@ -80,6 +93,8 @@ async fn post_login(
             // Renderiza o template de login injetando a mensagem de erro específica
             let template = LoginPage {
                 error_message: Some(mensagem),
+                ok_message: None,
+                old_user_name: Some(usuario_login.user_name.clone()),
             };
 
             let status = match err {

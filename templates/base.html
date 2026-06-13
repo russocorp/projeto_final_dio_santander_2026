@@ -1,13 +1,19 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html :class="{ 'theme-dark': dark }" x-data="data()" lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{% endblock %} - RR Sistemas</title>
 
-    <!-- Tailwind CSS v4 CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <script src="/assets/js/init-alpine.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.com/libraries/Chart.js" />
+    <script src="/assets/js/charts-lines.js" defer></script>
+    <script src="/assets/js/charts-pie.js" defer></script>
 
     <link rel="icon" type="image/png" href="/assets/images/favicon-32x32.png">
     <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
@@ -24,8 +30,7 @@
     {% block head %}{% endblock %}
 </head>
 
-<body
-    class="bg-gradient-to-br from-gray-100 to-gray-400 font-sans antialiased min-h-screen flex items-center justify-center px-4 py-8">
+<body {% block body %}{% endblock %}>
 
     <!-- O conteúdo específico de cada página entra aqui -->
     {% block conteudo %}{% endblock %}
