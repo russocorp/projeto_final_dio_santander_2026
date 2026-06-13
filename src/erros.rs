@@ -1,5 +1,6 @@
 use axum::response::{IntoResponse, Json, Response};
 use serde::Serialize;
+use std::convert::From;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -24,6 +25,10 @@ pub enum AppError {
     UsuarioDuplicado,
     #[error(transparent)]
     Template(#[from] askama::Error),
+    #[error(transparent)]
+    ConfiguracaoInvalida(#[from] std::env::VarError),
+    #[error(transparent)]
+    Jwt(#[from] jwt_simple::Error),
 }
 #[derive(Serialize)]
 pub struct ErrorResponse {
@@ -43,9 +48,11 @@ impl IntoResponse for AppError {
             }
             Self::NotFound | Self::UsuarioInexistente => axum::http::StatusCode::NOT_FOUND,
             Self::Unauthorized => axum::http::StatusCode::FORBIDDEN,
-            Self::InternalServerError | Self::DatabaseError(_) | Self::Template(_) => {
-                axum::http::StatusCode::INTERNAL_SERVER_ERROR
-            }
+            Self::InternalServerError
+            | Self::DatabaseError(_)
+            | Self::Template(_)
+            | Self::ConfiguracaoInvalida(_)
+            | Self::Jwt(_) => axum::http::StatusCode::INTERNAL_SERVER_ERROR,
         };
 
         (status, Json(response).into_response()).into_response()

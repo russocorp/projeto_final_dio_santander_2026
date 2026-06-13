@@ -5,9 +5,11 @@ use crate::models::moeda::{Moeda, MoedaCreate, MoedaUpdate};
 use crate::repositorio::Repositorio;
 use axum::extract::Path;
 use axum::{Json, Router, routing::get};
+use time::OffsetDateTime;
 
 pub fn router() -> Router<AppState> {
     Router::new()
+        .route("/ping", get(ping))
         .route("/moedas", get(get_moedas).post(post_moedas))
         .route("/moedas/{id}", get(get_moeda).patch(patch_moedas))
 }
@@ -49,4 +51,15 @@ async fn patch_moedas(
         Some(moeda_atualizada) => Ok(Json(moeda_atualizada)),
         None => Err(AppError::NotFound),
     }
+}
+
+#[tracing::instrument(skip_all)]
+async fn ping() -> String {
+    let agora = OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc());
+    let formatado = agora
+        .format(&time::macros::format_description!(
+            "[year]-[month]-[day] [hour]:[minute]:[second]"
+        ))
+        .unwrap();
+    format!("PONG - {}", formatado)
 }

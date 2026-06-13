@@ -2,13 +2,16 @@ use askama::Template;
 use axum::{
     Form, Router,
     http::StatusCode,
-    response::{Html, IntoResponse},
+    response::{Html, IntoResponse, Redirect},
     routing::{get, post},
 };
 use serde::Deserialize;
 
 use crate::{
-    app::AppState, erros::AppError, models::usuario::UsuarioLogin, repositorio::Repositorio,
+    app::AppState,
+    erros::AppError,
+    models::usuario::{UsuarioCreate, UsuarioLogado},
+    repositorio::Repositorio,
 };
 
 pub fn router() -> Router<AppState> {
@@ -30,14 +33,27 @@ struct RegistrarPayload {
 }
 
 // Rota GET: Exibe a página de login limpa (sem erros)
-async fn registrar() -> Result<Html<String>, AppError> {
-    Ok(Html(
+async fn registrar(usuario_logado: Option<UsuarioLogado>) -> Result<impl IntoResponse, AppError> {
+    if usuario_logado.is_some() {
+        return Ok(Redirect::to("/").into_response());
+    }
+
+    let template = RegistrarPage {
+        error_message: None,
+    };
+
+    match template.render() {
+        Ok(html) => return Ok(Html(html).into_response()),
+        Err(_) => Err(AppError::InternalServerError),
+    }
+
+    /*Ok(Html(
         RegistrarPage {
             error_message: None,
         }
         .render()
         .unwrap_or_else(|_| "Erro ao renderizar página".into()),
-    ))
+    ));*/
 }
 
 // Rota POST: Processa as credenciais e retorna Result<(), AuthError>
@@ -45,15 +61,16 @@ async fn post_registrar(
     repositorio: Repositorio,
     Form(payload): Form<RegistrarPayload>,
 ) -> impl IntoResponse {
-    // Alterado para 'impl IntoResponse' para aceitar retornos de tipos diferentes
-
-    let usuario_login = UsuarioLogin {
-        user_name: payload.user_name,
-        password: payload.password,
+    // Implementação simples para criar um usuário do tipo administrador.
+    let usuario_criar = UsuarioCreate {
+        nome: payload.nome.clone(),
+        user_name: payload.user_name.clone(),
+        password: payload.password.clone(),
+        is_admin: payload.nome.clone() == "admin",
     };
 
     // Executa o login e intercepta o erro diretamente
-    if let Err(err) = usuario_login.login(&repositorio).await {
+    if let Err(err) = usuario_criar.create_usuario(&repositorio).await {
         // Define a mensagem com base no AppError retornado pelo banco/regra de negócio
         let mensagem = err.to_string();
 
@@ -62,9 +79,8 @@ async fn post_registrar(
             error_message: Some(mensagem),
         };
 
-        // Retorna a página com o erro (Status 401 para credenciais, ou 500 para falhas internas)
         let status = match err {
-            AppError::UsuarioInexistente | AppError::SenhaIncorreta => StatusCode::UNAUTHORIZED,
+            AppError::UsuarioDuplicado => StatusCode::BAD_REQUEST,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
@@ -77,11 +93,5 @@ async fn post_registrar(
                 .into_response(),
         };
     }
-
-    // Sucesso: Retorna página ou redireciona
-    (
-        StatusCode::OK,
-        Html("<h1>Login efetuado com sucesso!</h1>".to_string()),
-    )
-        .into_response()
+    Redirect::to("/login").into_response()
 }

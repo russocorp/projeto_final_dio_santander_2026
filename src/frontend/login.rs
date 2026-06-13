@@ -2,13 +2,18 @@ use askama::Template;
 use axum::{
     Form, Router,
     http::StatusCode,
-    response::{Html, IntoResponse},
+    response::{Html, IntoResponse, Redirect},
     routing::{get, post},
 };
+use axum_extra::extract::{CookieJar, cookie::Cookie};
+use jwt_simple::token;
 use serde::Deserialize;
 
 use crate::{
-    app::AppState, erros::AppError, models::usuario::UsuarioLogin, repositorio::Repositorio,
+    app::AppState,
+    erros::AppError,
+    models::usuario::{UsuarioLogado, UsuarioLogin},
+    repositorio::Repositorio,
 };
 
 pub fn router() -> Router<AppState> {
@@ -29,73 +34,62 @@ struct LoginPayload {
 }
 
 // Rota GET: Exibe a página de login limpa (sem erros)
-async fn login() -> Result<Html<String>, AppError> {
-    Ok(Html(
-        LoginPage {
-            error_message: None,
-        }
-        .render()
-        .unwrap_or_else(|_| "Erro ao renderizar página".into()),
-    ))
+async fn login(usuario_logado: Option<UsuarioLogado>) -> Result<impl IntoResponse, AppError> {
+    if usuario_logado.is_some() {
+        return Ok(Redirect::to("/").into_response());
+    }
+
+    let template = LoginPage {
+        error_message: None,
+    };
+
+    match template.render() {
+        Ok(html) => return Ok(Html(html).into_response()),
+        Err(_) => Err(AppError::InternalServerError),
+    }
 }
 
 // Rota POST: Processa as credenciais e retorna Result<(), AuthError>
 async fn post_login(
     repositorio: Repositorio,
+    jar: CookieJar,
     Form(payload): Form<LoginPayload>,
-) -> impl IntoResponse {
-    // Alterado para 'impl IntoResponse' para aceitar retornos de tipos diferentes
-
+) -> Result<impl IntoResponse, AppError> {
     let usuario_login = UsuarioLogin {
         user_name: payload.user_name,
         password: payload.password,
     };
 
     // Executa o login e intercepta o erro diretamente
-    if let Err(err) = usuario_login.login(&repositorio).await {
-        // Define a mensagem com base no AppError retornado pelo banco/regra de negócio
-        let mensagem = err.to_string();
+    match usuario_login.login(&repositorio).await {
+        Ok(usuario) => {
+            // faz algo com o usuário
 
-        // Renderiza o template de login injetando a mensagem de erro específica
-        let template = LoginPage {
-            error_message: Some(mensagem),
-        };
+            let token = match usuario.generate_auth_token(&repositorio).await {
+                Ok(token) => token,
+                Err(_) => return Err(AppError::InternalServerError),
+            };
 
-        // Retorna a página com o erro (Status 401 para credenciais, ou 500 para falhas internas)
-        let status = match err {
-            AppError::UsuarioInexistente | AppError::SenhaIncorreta => StatusCode::UNAUTHORIZED,
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
-        };
+            let cookie = Cookie::build(("token", token)).http_only(true);
 
-        return match template.render() {
-            Ok(html) => (status, Html(html)).into_response(),
-            Err(_) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Erro crítico de renderização",
-            )
-                .into_response(),
-        };
+            return Ok((jar.add(cookie), Redirect::to("/")).into_response());
+        }
+        Err(err) => {
+            let mensagem = err.to_string();
+
+            // Renderiza o template de login injetando a mensagem de erro específica
+            let template = LoginPage {
+                error_message: Some(mensagem),
+            };
+
+            let status = match err {
+                AppError::UsuarioInexistente | AppError::SenhaIncorreta => StatusCode::UNAUTHORIZED,
+                _ => StatusCode::INTERNAL_SERVER_ERROR,
+            };
+            match template.render() {
+                Ok(html) => return Ok((status, Html(html)).into_response()),
+                Err(_) => Err(AppError::InternalServerError),
+            }
+        }
     }
-
-    // Sucesso: Retorna página ou redireciona
-    (
-        StatusCode::OK,
-        Html("<h1>Login efetuado com sucesso!</h1>".to_string()),
-    )
-        .into_response()
 }
-
-/*
-    // Prepara o template com o erro correspondente
-    let template = LoginPage {
-        error_message: Some(mensagem.to_string()),
-    };
-
-    // Renderiza o HTML com o erro. Se falhar, retorna erro 500 básico.
-    match template.render() {
-        Ok(html) => (StatusCode::UNAUTHORIZED, Html(html)).into_response(),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Erro Crítico").into_response(),
-    }
-
-
-*/

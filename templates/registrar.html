@@ -1,73 +1,55 @@
 {% extends "base.html" %}
 {% import "componentes.html" as comp %}
 
-{% block title %}Registrar - Meu Sistema{% endblock %}
+{% block title %}Registrar{% endblock %}
 
 {% block conteudo %}
-  <div class="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-    <!-- cabeçalho -->
-    <div class="bg-blue-600 py-4 px-6">
-      <h1 class="text-2xl font-bold text-white text-center tracking-tight">Login</h1>
-      <p class="text-blue-100 text-center text-sm mt-1">Criar Usuário</p>
-    </div>
-
-    <!-- formulário -->
-    <div class="p-6 md:p-8">
-      <form method="post" action="/registrar" id="registrarForm">
-        
-        {% if let Some(error_msg) = error_message %}
-        <div class="mb-5 p-3 bg-red-50 border-l-4 border-red-500 rounded-xl text-red-700 text-sm shadow-sm">
-            <div class="flex items-start">
-            <svg class="w-5 h-5 mr-2 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{{ error_msg }}</span>
+<div class="flex justify-center">
+    <div class="w-96 backdrop-blur-lg bg-opacity-80 rounded-lg shadow-lg p-5 bg-gray-900 text-white">
+        <h2 class="text-2xl font-bold pb-5">Registrar</h2>
+        <form method="post" action="/registrar" id="registrarForm">
+            <div class="mb-4">
+                <label for="nome" class="block mb-2 text-sm font-medium">Nome</label>
+                <input type="name" id="nome" name="nome"
+                    class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full py-2.5 px-4"
+                    placeholder="seu nome" required value="">
             </div>
-        </div>
-        {% endif %}
+            <div class="mb-4">
+                <label for="user_name" class="block mb-2 text-sm font-medium">Usuário</label>
+                <input type="user" id="user_name" name="user_name"
+                    class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full py-2.5 px-4"
+                    placeholder="usuario" required value="">
+            </div>
+            <div class="mb-4">
+                <label for="password" class="block mb-2 text-sm font-medium">Senha</label>
+                <input type="password" id="password" name="password"
+                    class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full py-2.5 px-4"
+                    placeholder="*********" required value="">
+            </div>
+            {% if let Some(error_msg) = error_message %}
+            <div class="mb-5 p-3 bg-red-50 border-l-4 border-red-500 rounded-xl text-red-700 text-sm shadow-sm">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 mr-2 flex-shrink-0 text-red-500" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{{ error_msg }}</span>
+                </div>
+            </div>
+            {% endif %}
 
-        <!-- Campo: Nome -->
-        <div class="mb-5">
-          <label for="nome" class="block text-gray-700 text-sm font-semibold mb-2 flex items-center gap-1">
-            Nome
-          </label>
-          <input type="text" id="nome" name="nome" required
-                 class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:border-blue-500 bg-gray-50 focus:bg-white transition-colors"
-                 placeholder="@nome">
-        </div>
+            <div class="space-y-3 mt-6">
+                {{ comp::botao_primario("Registrar", "submit", Some("btnRegistrar")) }}
 
-        <!-- Campo: UserName -->
-        <div class="mb-5">
-          <label for="user_name" class="block text-gray-700 text-sm font-semibold mb-2 flex items-center gap-1">
-            Usuário
-          </label>
-          <input type="text" id="user_name" name="user_name" required
-                 class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:border-blue-500 bg-gray-50 focus:bg-white transition-colors"
-                 placeholder="@usuario">
-        </div>
-
-        <!-- Campo: Password -->
-        <div class="mb-6">
-          <label for="password" class="block text-gray-700 text-sm font-semibold mb-2 flex items-center gap-1">
-            Senha
-          </label>
-          <input type="password" id="password" name="password" required
-                 class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:border-blue-500 bg-gray-50 focus:bg-white transition-colors"
-                 placeholder="••••••••">
-        </div>
-
-        <div class="space-y-3 mt-6">
-            <!-- Chamando o botão primário para enviar o formulário (Submit) -->
-            {{ comp::botao_primario("Registrar", "submit", Some("btnEntrar")) }}
-            
-            <!-- Chamando o botão secundário que apenas redireciona (ex: para criar conta) -->
-            {{ comp::botao_secundario("Login", "/login") }}
-        </div>
-      </form>
-
-      <div class="mt-6 pt-4 border-t border-gray-100 text-center">
-        <p class="text-xs text-gray-400">🔐 Processado via Rust + Askama</p>
-      </div>
+                <div class="flex items-center text-sm">
+                    <p>Já tem uma conta?</p>
+                    <a href="/login">
+                        <p class="underline cursor-pointer ml-1">Login</p>
+                    </a>
+                </div>
+            </div>
+        </form>
     </div>
-  </div>
+</div>
 {% endblock %}
