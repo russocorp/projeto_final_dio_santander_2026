@@ -49,6 +49,8 @@ impl App {
             .merge(frontend::index::router())
             .merge(frontend::login::router())
             .merge(frontend::registrar::router())
+            .merge(frontend::moedas::router())
+            .merge(frontend::sair::router())
             .route_service(
                 "/favicon.png",
                 ServeFile::new("assets/image/favicon-32x32.png"),
