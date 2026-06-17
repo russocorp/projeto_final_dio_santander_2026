@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html :class="{ 'theme-dark': dark }" x-data="data()" lang="pt-br">
+<html x-data="data()" x-init="data()" lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
@@ -8,15 +8,26 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- Tailwind CSS Browser Script -->
+    <script src="https://unpkg.com/@tailwindcss/browser"></script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-    <script src="/assets/js/init-alpine.js"></script>
+    <script src="/assets/js/init-alpine.js" defer></script>
     <link rel="stylesheet" href="https://cdnjs.com/libraries/Chart.js" />
+
     <script src="/assets/js/charts-lines.js" defer></script>
     <script src="/assets/js/charts-pie.js" defer></script>
-
     <link rel="icon" type="image/png" href="/assets/images/favicon-32x32.png">
     <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+
+    <style type="text/tailwindcss">
+        /* Configure dark mode to trigger via .dark class */
+        @custom-variant dark (&:where(.dark, .dark *));
+    
+        @theme {
+          --color-primary: #3b82f6;
+        }
+      </style>
 
     <style>
         input:focus {
@@ -26,6 +37,13 @@
         }
     </style>
 
+    <!-- Apply saved theme immediately to prevent FOUC -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+
     <!-- Caso alguma página precise de scripts/estilos extras no head -->
     {% block head %}{% endblock %}
 </head>
@@ -34,7 +52,21 @@
 
     <!-- O conteúdo específico de cada página entra aqui -->
     {% block conteudo %}{% endblock %}
+    <!-- Toggle Logic -->
+    <script>
+        const toggleBtn = document.getElementById('theme-toggle');
+        const html = document.documentElement;
 
+        toggleBtn.addEventListener('click', () => {
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+    </script
 </body>
 
 </html>
