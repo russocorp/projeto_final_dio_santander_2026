@@ -4,6 +4,7 @@ function data() {
         isSideMenuOpen: false,
         isNotificationsMenuOpen: false,
         isProfileMenuOpen: false,
+        //aberto: false,
         toggleSideMenu() {
             this.isSideMenuOpen = !this.isSideMenuOpen;
         },

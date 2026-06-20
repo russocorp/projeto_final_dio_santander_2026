@@ -22,4 +22,7 @@ cargo sqlx migrate run
 
 Iniciar com watch:
 cargo watch -x check -x run
+
+capturar o ip do host do wsl
+ip route show | grep -i default | awk '{ print $3}'
 */

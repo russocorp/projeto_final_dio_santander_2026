@@ -22,3 +22,9 @@ pub struct MoedaCreate {
     pub simbolo: String,
     pub valor: BigDecimal,
 }
+
+#[derive(Serialize, Clone, sqlx::FromRow)]
+pub struct Transacao {
+    pub data: String,
+    pub valor: BigDecimal,
+}
