@@ -1,7 +1,7 @@
 use crate::app::AppState;
 use crate::auth::admin::Admin;
 use crate::erros::AppError;
-use crate::models::moeda::{Moeda, MoedaCreate, MoedaUpdate};
+use crate::models::moeda::{Moeda, MoedaUpdate};
 use crate::repositorio::Repositorio;
 use axum::extract::Path;
 use axum::{Json, Router, routing::get};
@@ -33,7 +33,7 @@ async fn get_moedas(repositorio: Repositorio) -> Result<Json<Vec<Moeda>>, AppErr
 async fn post_moedas(
     _admin: Admin,
     repositorio: Repositorio,
-    Json(request): Json<MoedaCreate>,
+    Json(request): Json<MoedaUpdate>,
 ) -> Result<Json<Moeda>, AppError> {
     let nova_moeda = repositorio.create_moeda(request).await?;
 

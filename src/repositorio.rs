@@ -4,7 +4,7 @@ use std::convert::Infallible;
 
 use crate::{
     app::AppState,
-    models::moeda::{Moeda, MoedaCreate, MoedaUpdate},
+    models::moeda::{Moeda, MoedaUpdate},
     models::usuario::{Usuario, UsuarioCreate},
 };
 
@@ -54,7 +54,7 @@ impl Repositorio {
         Ok(moedas)
     }
 
-    pub async fn create_moeda(&self, moeda: MoedaCreate) -> sqlx::Result<Moeda> {
+    pub async fn create_moeda(&self, moeda: MoedaUpdate) -> sqlx::Result<Moeda> {
         let nova_moeda = sqlx::query_as!(
             Moeda,
             "INSERT INTO moedas (nome, simbolo, valor, inclusao_usuario)

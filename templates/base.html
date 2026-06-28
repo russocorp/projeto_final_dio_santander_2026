@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html x-data="data()" lang="pt-br">
+<html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
@@ -12,11 +12,11 @@
     <!-- Tailwind CSS Browser Script -->
     <script src="https://unpkg.com/@tailwindcss/browser"></script>
     <script src="/assets/js/init-alpine.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-    <link rel="stylesheet" href="https://cdnjs.com/libraries/Chart.js" />
-
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.15.12/dist/cdn.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.com/libraries/Chart.js" />   
     <script src="/assets/js/charts-lines.js" defer></script>
-    <script src="/assets/js/charts-pie.js" defer></script>
+    <script src="/assets/js/charts-pie.js" defer></script> -->
     <link rel="icon" type="image/png" href="/assets/images/favicon-32x32.png">
     <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
 
@@ -35,6 +35,10 @@
             border-color: #3b82f6;
             outline: none;
         }
+
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
 
     <!-- Apply saved theme immediately to prevent FOUC -->
@@ -48,7 +52,7 @@
     {% block head %}{% endblock %}
 </head>
 
-<body {% block body %}{% endblock %}>
+<body x-data="data()" {% block body %}{% endblock %}>
 
     <!-- O conteúdo específico de cada página entra aqui -->
     {% block conteudo %}{% endblock %}

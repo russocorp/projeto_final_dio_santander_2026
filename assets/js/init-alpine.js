@@ -4,7 +4,19 @@ function data() {
         isSideMenuOpen: false,
         isNotificationsMenuOpen: false,
         isProfileMenuOpen: false,
-        //aberto: false,
+        modalAberto: false,
+        moedaSelecionada: { id: null, nome: '', simbolo: '', valor: '' },
+        modoModal: 'alterar',
+        abrirModal(id, nome, simbolo, valor) {
+            this.modoModal = 'alterar';
+            this.moedaSelecionada = { id, nome, simbolo, valor };
+            this.modalAberto = true;
+        },
+        abrirModalIncluir() {
+            this.modoModal = 'incluir';
+            this.moedaSelecionada = { id: null, nome: '', simbolo: '', valor: '' };
+            this.modalAberto = true;
+        },
         toggleSideMenu() {
             this.isSideMenuOpen = !this.isSideMenuOpen;
         },
