@@ -1,3 +1,4 @@
+use crate::filters;
 use askama::Template;
 use axum::{
     Json, Router,
@@ -66,7 +67,7 @@ struct MoedaPayload {
 async fn post_moedas(
     usuario_logado: Option<UsuarioLogado>,
     repositorio: Repositorio,
-    Json(payload): Json<MoedaPayload>, //Form(payload): Form<MoedaPayload>,
+    Json(payload): Json<MoedaPayload>,
 ) -> Result<Response, AppError> {
     match usuario_logado {
         Some(usuario) => {

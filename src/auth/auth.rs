@@ -1,7 +1,7 @@
 use std::convert::Infallible;
 
 use axum::extract::FromRequestParts;
-use axum_extra::extract::{CookieJar, cookie::Cookie};
+use axum_extra::extract::CookieJar;
 use jwt_simple::{
     algorithms::{HS256Key, MACLike},
     claims::Claims,
@@ -9,7 +9,7 @@ use jwt_simple::{
 };
 
 use crate::{
-    app::{App, AppState},
+    app::AppState,
     erros::AppError,
     models::usuario::{Usuario, UsuarioCreate, UsuarioLogado, UsuarioLogin},
     repositorio::Repositorio,

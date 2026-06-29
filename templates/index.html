@@ -39,6 +39,7 @@
                                     <th class="px-4 py-3">Símbolo</th>
                                     <th class="px-4 py-3">Valor</th>
                                     <th class="px-4 py-3"></th>
+                                    <th class="px-4 py-3"></th>
                                 </tr>
                             </thead>
 
@@ -51,7 +52,7 @@
                                 <tr class="text-gray-700 dark:text-gray-400">
                                     <td class="px-4 py-3 text-sm">{{ moeda.nome }}</td>
                                     <td class="px-4 py-3 text-sm">{{ moeda.simbolo }}</td>
-                                    <td class="px-4 py-3 text-sm">R$ {{ moeda.valor.with_scale(4) }}</td>
+                                    <td class="px-4 py-3 text-sm">R$ {{ moeda.valor|formato_brl }}</td>
                                     <td class="px-4 py-3 text-sm text-right">
                                         <button @click="aberto = !aberto"
                                             class="flex items-center gap-1 text-purple-600 hover:text-purple-800 dark:text-purple-400 text-xs font-semibold focus:outline-none">
@@ -62,6 +63,17 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 9l-7 7-7-7" />
                                             </svg>
+                                        </button>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <button
+                                            @click="abrirModalTransacao({{ moeda.id }}, '{{ moeda.nome }}', '{{ moeda.simbolo }}', '{{ moeda.valor.with_scale(4) }}')"
+                                            class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            Incluir
                                         </button>
                                     </td>
                                 </tr>
@@ -103,6 +115,87 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Overlay escuro -->
+    <div x-show="modalAberto" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-30 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+        @click.self="modalAberto = false">
+
+        <!-- Modal -->
+        <div x-show="modalAberto" x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            class="w-full max-w-md rounded-lg shadow-xl z-40 overflow-hidden bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-white/20 dark:border-gray-700/50">
+
+            <!-- Cabeçalho -->
+            <div class="flex items-center justify-between px-6 py-4 border-b dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                    Incluir Transação
+                </h3>
+                <button @click="modalAberto = false"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Corpo -->
+            <form @submit.prevent="
+                    fetch('/transacao', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            id: moedaTransacaoSelecionada.id,
+                            data: moedaTransacaoSelecionada.data,
+                            quantidade: parseFloat(moedaTransacaoSelecionada.quantidade)
+                        })
+                    })
+                    .then(res => {
+                        if (res.ok) {
+                            modalAberto = false;
+                            window.location.reload();
+                        }
+                    })
+                ">
+                <div class="px-6 py-5 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Nome</label>
+                        <input type="text" x-model="moedaTransacaoSelecionada.nome"
+                            class="w-full px-3 py-2 text-sm text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-600 rounded-lg readonly" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Data</label>
+                        <input type="date" x-model="moedaTransacaoSelecionada.data.toISOString().split('T')[0]"
+                            class="w-full px-3 py-2 text-sm text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-600 rounded-lg" />
+                    </div>
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Quantidade</label>
+                        <input type="number" step="0.0001" x-model="moedaTransacaoSelecionada.quantidade"
+                            class="w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                </div>
+
+                <!-- Rodapé -->
+                <div class="flex justify-end gap-3 px-6 py-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                    <button type="button" @click="modalAberto = false"
+                        class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 focus:outline-none">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
+                        Salvar
+                    </button>
+                </div>
+            </form>
+
+        </div>
     </div>
 </div>
 {% endblock %}

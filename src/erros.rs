@@ -1,6 +1,5 @@
 use axum::response::{IntoResponse, Json, Response};
 use serde::Serialize;
-use std::convert::From;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

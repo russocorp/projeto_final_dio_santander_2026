@@ -6,6 +6,7 @@ function data() {
         isProfileMenuOpen: false,
         modalAberto: false,
         moedaSelecionada: { id: null, nome: '', simbolo: '', valor: '' },
+        moedaTransacaoSelecionada: { id: null, nome: '', valor: '', data: '', quantidade: '' },
         modoModal: 'alterar',
         abrirModal(id, nome, simbolo, valor) {
             this.modoModal = 'alterar';
@@ -15,6 +16,10 @@ function data() {
         abrirModalIncluir() {
             this.modoModal = 'incluir';
             this.moedaSelecionada = { id: null, nome: '', simbolo: '', valor: '' };
+            this.modalAberto = true;
+        },
+        abrirModalTransacao(id, nome, valor) {            
+            this.moedaTransacaoSelecionada = { id, nome, valor, data: new Date(), quantidade: 1 };
             this.modalAberto = true;
         },
         toggleSideMenu() {

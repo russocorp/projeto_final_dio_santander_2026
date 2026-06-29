@@ -3,6 +3,7 @@ use crate::app::App;
 mod app;
 mod auth;
 mod erros;
+pub mod filters;
 mod frontend;
 mod models;
 mod repositorio;

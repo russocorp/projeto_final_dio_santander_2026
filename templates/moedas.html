@@ -58,7 +58,7 @@
                                 <tr class="text-gray-700 dark:text-gray-400">
                                     <td class="px-4 py-3 text-sm">{{ moeda.nome }}</td>
                                     <td class="px-4 py-3 text-sm">{{ moeda.simbolo }}</td>
-                                    <td class="px-4 py-3 text-sm">R$ {{ moeda.valor.with_scale(4) }}</td>
+                                    <td class="px-4 py-3 text-sm">R$ {{ moeda.valor|formato_brl }}</td>
                                     <td class="px-4 py-3 text-sm text-right">
                                         <!-- Botão que abre o modal passando os dados da linha -->
                                         <button

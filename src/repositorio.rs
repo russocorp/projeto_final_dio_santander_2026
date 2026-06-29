@@ -4,8 +4,11 @@ use std::convert::Infallible;
 
 use crate::{
     app::AppState,
-    models::moeda::{Moeda, MoedaUpdate},
-    models::usuario::{Usuario, UsuarioCreate},
+    models::{
+        moeda::{Moeda, MoedaUpdate},
+        transacao::{Transacao, TransacaoCreate},
+        usuario::{Usuario, UsuarioCreate, UsuarioLogado},
+    },
 };
 
 pub struct Repositorio {
@@ -125,5 +128,28 @@ impl Repositorio {
         .await?;
 
         Ok(usuario)
+    }
+
+    pub async fn create_transacao(
+        &self,
+        usuario: &UsuarioLogado,
+        transacao: &TransacaoCreate,
+    ) -> sqlx::Result<Transacao> {
+        let nova_transacao = sqlx::query_as!(
+            Transacao,
+            "INSERT INTO transacoes (id_usuarios, id_moedas, data_transacao, quantidade, inclusao_usuario)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id, id_usuarios, id_moedas, data_transacao, quantidade
+            ",
+            usuario.id,
+            transacao.id,
+            transacao.data,
+            transacao.quantidade,
+            usuario.user_name
+        )
+        .fetch_one(&self.db)
+        .await?;
+
+        Ok(nova_transacao)
     }
 }
