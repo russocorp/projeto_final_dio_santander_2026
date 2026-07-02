@@ -31,31 +31,40 @@
                 <!-- New Table -->
                 <div class="w-full overflow-hidden rounded-lg shadow-xs">
                     <div class="w-full overflow-x-auto">
-                        <table class="w-full whitespace-no-wrap">
+                        <table class="w-full whitespace-no-wrap hidden md:table">
                             <thead>
                                 <tr
                                     class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
                                     <th class="px-4 py-3">Nome</th>
                                     <th class="px-4 py-3">Símbolo</th>
                                     <th class="px-4 py-3">Valor</th>
+                                    <th class="px-4 py-3">Quantidade</th>
+                                    <th class="px-4 py-3 text-right">Diferença</th>
                                     <th class="px-4 py-3"></th>
                                     <th class="px-4 py-3"></th>
                                 </tr>
                             </thead>
 
-                            {% for moeda in moedas %}
-                            <!-- Cada tbody é um escopo Alpine independente -->
+                            {% for transacao in transacoes %}
+                            <!-- VERSÃO DESKTOP -->
                             <tbody x-data="{ aberto: false }"
-                                class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
-
+                                class="hidden md:table-row-group bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
                                 <!-- Linha principal -->
                                 <tr class="text-gray-700 dark:text-gray-400">
-                                    <td class="px-4 py-3 text-sm">{{ moeda.nome }}</td>
-                                    <td class="px-4 py-3 text-sm">{{ moeda.simbolo }}</td>
-                                    <td class="px-4 py-3 text-sm">R$ {{ moeda.valor|formato_brl }}</td>
+                                    <td class="px-4 py-3 text-sm">{{ transacao.nome }}</td>
+                                    <td class="px-4 py-3 text-sm">{{ transacao.simbolo }}</td>
+                                    <td class="px-4 py-3 text-sm">R$ {{ transacao.valor|formato_brl }}</td>
                                     <td class="px-4 py-3 text-sm text-right">
+
+                                        {% if transacao.transacoes.0.is_empty() %}
+                                        <!-- Caso NÃO tenha transações: Apenas um texto explicativo sem clique -->
+                                        <span class="text-xs text-gray-400 dark:text-gray-500 italic pr-5">
+                                            Sem transações
+                                        </span>
+                                        {% else %}
+                                        <!-- Caso TENHA transações: Mantém o botão interativo do Alpine -->
                                         <button @click="aberto = !aberto"
-                                            class="flex items-center gap-1 text-purple-600 hover:text-purple-800 dark:text-purple-400 text-xs font-semibold focus:outline-none">
+                                            class="flex items-center gap-1 text-purple-600 hover:text-purple-800 dark:text-purple-400 text-xs font-semibold focus:outline-none ml-auto">
                                             <span x-text="aberto ? 'Fechar' : 'Transações'"></span>
                                             <svg class="w-4 h-4 transition-transform duration-200"
                                                 :class="{ 'rotate-180': aberto }" fill="none" stroke="currentColor"
@@ -64,53 +73,147 @@
                                                     d="M19 9l-7 7-7-7" />
                                             </svg>
                                         </button>
+                                        {% endif %}
+
                                     </td>
                                     <td class="px-4 py-3 text-sm">
                                         <button
-                                            @click="abrirModalTransacao({{ moeda.id }}, '{{ moeda.nome }}', '{{ moeda.simbolo }}', '{{ moeda.valor.with_scale(4) }}')"
-                                            class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 4v16m8-8H4" />
-                                            </svg>
-                                            Incluir
+                                            @click="abrirModalTransacao('{{ transacao.id }}', '{{ transacao.nome }}', '{{ transacao.valor }}')"
+                                            class="px-3 py-1.5 text-xs font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none">
+                                            + Incluir
                                         </button>
                                     </td>
                                 </tr>
 
-                                <!-- Linha do accordion -->
-                                <tr x-show="aberto" x-transition class="bg-gray-50 dark:bg-gray-700">
-                                    <td colspan="4" class="px-6 py-4">
-                                        <table class="w-full text-sm text-gray-600 dark:text-gray-300">
-                                            <thead>
-                                                <tr
-                                                    class="text-xs uppercase text-gray-400 border-b dark:border-gray-600">
-                                                    <th class="pb-2 text-left">Data</th>
-                                                    <th class="pb-2 text-right">Valor</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for transacao in transacoes %}
-                                                <tr class="border-b dark:border-gray-600 last:border-0">
-                                                    <td class="py-2">{{ transacao.data }}</td>
-                                                    <td class="py-2 text-right">{{ transacao.valor.with_scale(4) }}</td>
-                                                </tr>
-                                                {% else %}
-                                                <tr>
-                                                    <td colspan="3" class="py-4 text-center text-gray-400">
-                                                        Nenhuma transação encontrada.
-                                                    </td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
+                                {% if !transacao.transacoes.0.is_empty() %}
+                                <!-- Tabela detalhada interna: Só entra no HTML se houver histórico -->
+                                <tr x-show="aberto" x-transition class="bg-gray-50 dark:bg-gray-900/50">
+                                    <td colspan="5" class="px-6 py-4">
+                                        <div
+                                            class="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-800/50 p-4">
+                                            <table class="w-full text-xs text-left table-fixed">
+                                                <thead>
+                                                    <tr
+                                                        class="text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold border-b border-gray-200 dark:border-gray-700 pb-2">
+                                                        <th class="pb-2 w-1/4 px-2">Data</th>
+                                                        <th class="pb-2 w-1/4 px-2">Quantidade</th>
+                                                        <th class="pb-2 w-1/4 px-2">Preço Compra</th>
+                                                        <th class="pb-2 w-1/4 px-2 text-right">Diferença</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                                                    {% for detalhe in transacao.transacoes.0 %}
+                                                    <tr
+                                                        class="text-gray-600 dark:text-gray-300 hover:bg-gray-100/50 dark:hover:bg-gray-700/30 transition-colors">
+                                                        <td class="py-2.5 px-2">{{ detalhe.data|formato_data }}</td>
+                                                        <td class="py-2.5 px-2 font-medium">{{ detalhe.quantidade }}
+                                                        </td>
+                                                        <td class="py-2.5 px-2">R$ {{ detalhe.valor|formato_brl }}</td>
+                                                        <td
+                                                            class="py-2.5 px-2 text-right font-semibold {% if detalhe.diferenca >= 0 %}text-green-500{% else %}text-red-500{% endif %}">
+                                                            R$ {{ detalhe.diferenca|formato_brl }}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </td>
                                 </tr>
-
+                                {% endif %}
                             </tbody>
+                            <!-- 2. VERSÃO MOBILE (Cards) -->
+                            <!-- Adicionamos 'md:hidden' para aparecer apenas em telas pequenas -->
+                            <div x-data="{ aberto: false }"
+                                class="block md:hidden bg-white dark:bg-gray-800 m-4 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+
+                                <!-- Cabeçalho do Card Principal -->
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800 dark:text-gray-200 text-base">{{
+                                            transacao.nome }}</h3>
+                                        <span class="text-xs text-gray-400 dark:text-gray-500 uppercase">{{
+                                            transacao.simbolo }}</span>
+                                    </div>
+                                    <!-- Botão Incluir Mobile -->
+                                    <button
+                                        @click="abrirModalTransacao('{{ transacao.id }}', '{{ transacao.nome }}', '{{ transacao.valor }}')"
+                                        class="px-3 py-1 text-xs font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700">
+                                        + Incluir
+                                    </button>
+                                </div>
+
+                                <!-- Indicadores Rápidos -->
+                                <div
+                                    class="grid grid-cols-3 gap-2 my-3 text-xs border-t border-b border-gray-100 dark:border-gray-700/50 py-2">
+                                    <div>
+                                        <p class="text-gray-400">Preço Atual</p>
+                                        <p class="font-medium text-gray-700 dark:text-gray-300">R$ {{
+                                            transacao.valor|formato_brl }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400">Qtd. Total</p>
+                                        <p class="font-medium text-gray-700 dark:text-gray-300">{{ transacao.quantidade
+                                            }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400">Diferença</p>
+                                        <p
+                                            class="font-semibold {% if transacao.diferenca >= 0 %}text-green-500{% else %}text-red-500{% endif %}">
+                                            R$ {{ transacao.diferenca|formato_brl }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Gatilho condicional baseado no número de transações -->
+                                {% if transacao.transacoes.0.is_empty() %}
+                                <!-- Caso NÃO tenha transações: Apenas um texto informativo discreto -->
+                                <div class="w-full text-center text-xs text-gray-400 dark:text-gray-500 pt-2 italic">
+                                    Nenhuma transação registrada
+                                </div>
+                                {% else %}
+                                <!-- Caso TENHA transações: Mantém o botão de expandir/recolher e o histórico -->
+                                <button @click="aberto = !aberto"
+                                    class="w-full flex items-center justify-between text-xs font-semibold text-purple-600 dark:text-purple-400 pt-1 focus:outline-none">
+                                    <span
+                                        x-text="aberto ? 'Ocultar histórico' : 'Ver transações (' + '{{ transacao.transacoes.0.len() }}' + ')'"></span>
+                                    <svg class="w-4 h-4 transition-transform duration-200"
+                                        :class="{ 'rotate-180': aberto }" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                <!-- Histórico Expandido no Mobile (só renderiza se houver dados) -->
+                                <div x-show="aberto" x-transition
+                                    class="mt-4 pt-3 border-t border-dashed border-gray-200 dark:border-gray-700 space-y-3">
+                                    {% for detalhe in transacao.transacoes.0 %}
+                                    <div class="bg-gray-50 dark:bg-gray-900/40 p-3 rounded-lg text-xs space-y-1">
+                                        <div class="flex justify-between text-gray-400">
+                                            <span>Data: <strong class="text-gray-600 dark:text-gray-300">{{
+                                                    detalhe.data|formato_data }}</strong></span>
+                                            <span>Qtd: <strong class="text-gray-600 dark:text-gray-300">{{
+                                                    detalhe.quantidade }}</strong></span>
+                                        </div>
+                                        <div class="flex justify-between items-center pt-1">
+                                            <span class="text-gray-500">Pág: R$ {{ detalhe.valor|formato_brl }}</span>
+                                            <span
+                                                class="font-semibold {% if detalhe.diferenca >= 0 %}text-green-500{% else %}text-red-500{% endif %}">
+                                                Dif: R$ {{ detalhe.diferenca|formato_brl }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                            </div>
                             {% endfor %}
 
                         </table>
+
                     </div>
                 </div>
             </div>
@@ -153,7 +256,8 @@
                         body: JSON.stringify({
                             id: moedaTransacaoSelecionada.id,
                             data: moedaTransacaoSelecionada.data,
-                            quantidade: parseFloat(moedaTransacaoSelecionada.quantidade)
+                            quantidade: parseFloat(moedaTransacaoSelecionada.quantidade),
+                            valor_compra: parseFloat(moedaTransacaoSelecionada.valor_compra)
                         })
                     })
                     .then(res => {
@@ -171,8 +275,14 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Data</label>
-                        <input type="date" x-model="moedaTransacaoSelecionada.data.toISOString().split('T')[0]"
+                        <input type="date" x-model="moedaTransacaoSelecionada.data"
                             class="w-full px-3 py-2 text-sm text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-600 rounded-lg" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Valor de
+                            Compra</label>
+                        <input type="number" step="0.0001" x-model="moedaTransacaoSelecionada.valor_compra"
+                            class="w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500" />
                     </div>
                     <div>
                         <label

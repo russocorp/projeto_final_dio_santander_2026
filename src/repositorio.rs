@@ -1,12 +1,13 @@
 use axum::extract::FromRequestParts;
 use sqlx::PgPool;
+use sqlx::types::Json;
 use std::convert::Infallible;
 
 use crate::{
     app::AppState,
     models::{
         moeda::{Moeda, MoedaUpdate},
-        transacao::{Transacao, TransacaoCreate},
+        transacao::{Transacao, TransacaoCreate, TransacaoUsuario, TransacaoUsuarioDetalhes},
         usuario::{Usuario, UsuarioCreate, UsuarioLogado},
     },
 };
@@ -137,13 +138,14 @@ impl Repositorio {
     ) -> sqlx::Result<Transacao> {
         let nova_transacao = sqlx::query_as!(
             Transacao,
-            "INSERT INTO transacoes (id_usuarios, id_moedas, data_transacao, quantidade, inclusao_usuario)
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING id, id_usuarios, id_moedas, data_transacao, quantidade
+            "INSERT INTO transacoes (id_usuarios, id_moedas, data_transacao, valor_compra, quantidade, inclusao_usuario)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id, id_usuarios, id_moedas, data_transacao, quantidade, valor_compra
             ",
             usuario.id,
             transacao.id,
             transacao.data,
+            transacao.valor_compra,
             transacao.quantidade,
             usuario.user_name
         )
@@ -151,5 +153,43 @@ impl Repositorio {
         .await?;
 
         Ok(nova_transacao)
+    }
+
+    pub async fn get_transacoes(
+        &self,
+        usuario: &UsuarioLogado,
+    ) -> sqlx::Result<Vec<TransacaoUsuario>> {
+        let transacoes = sqlx::query_as!(
+        TransacaoUsuario,
+        r#"
+        select 
+            moedas.id as "id!", 
+            moedas.nome as "nome!", 
+            moedas.simbolo as "simbolo!", 
+            moedas.valor as "valor!",
+            coalesce(sum((moedas.valor - transacoes.valor_compra) * transacoes.quantidade), 0)::numeric as "diferenca!",
+            coalesce(sum(transacoes.quantidade), 0)::numeric as "quantidade!",
+            coalesce(
+                json_agg(
+                    json_build_object(
+                        'data', transacoes.data_transacao,
+                        'valor', transacoes.valor_compra,
+                        'quantidade', transacoes.quantidade,
+                        'diferenca', (moedas.valor - transacoes.valor_compra) * transacoes.quantidade
+                    )
+                ) filter (where transacoes.id is not null),
+                '[]'::json
+            ) as "transacoes!: sqlx::types::Json<Vec<TransacaoUsuarioDetalhes>>"
+        from moedas
+        left join transacoes on transacoes.id_moedas = moedas.id
+            and transacoes.id_usuarios = $1
+        group by moedas.id, moedas.nome, moedas.simbolo
+        "#, 
+        usuario.id
+    )
+    .fetch_all(&self.db)
+    .await?;
+
+        Ok(transacoes)
     }
 }

@@ -23,3 +23,8 @@ pub fn formato_brl(valor: &BigDecimal, _values: &dyn Values) -> Result<String> {
 
     Ok(format!("{}{},{:04}", sinal, inteiro_str, decimais))
 }
+#[askama::filter_fn]
+pub fn formato_data(data: &time::Date, _values: &dyn Values) -> ::askama::Result<String> {
+    let formato = time::macros::format_description!("[day]/[month]/[year]");
+    Ok(data.format(&formato).unwrap_or_else(|_| "".to_string()))
+}

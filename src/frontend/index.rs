@@ -6,7 +6,7 @@ use axum::{
 };
 use bigdecimal::BigDecimal;
 use serde::Deserialize;
-use std::str::FromStr;
+
 use time::Date;
 use time::macros::format_description;
 
@@ -14,8 +14,7 @@ use crate::{
     app::AppState,
     erros::AppError,
     models::{
-        moeda::{Moeda, Transacao},
-        transacao::TransacaoCreate,
+        transacao::{TransacaoCreate, TransacaoUsuario},
         usuario::UsuarioLogado,
     },
     repositorio::Repositorio,
@@ -33,8 +32,7 @@ pub fn router() -> Router<AppState> {
 struct IndexPage {
     usuario: String,
     is_admin: bool,
-    moedas: Vec<Moeda>,
-    transacoes: Vec<Transacao>,
+    transacoes: Vec<TransacaoUsuario>,
 }
 
 // Rota GET: Exibe a página inicial
@@ -44,19 +42,13 @@ async fn index(
 ) -> Result<Response, AppError> {
     match usuario_logado {
         Some(usuario) => {
-            let dados = repositorio.get_moedas().await?;
-            let mut transacoes: Vec<Transacao> = Vec::new();
-            transacoes.push(Transacao {
-                data: "10/10/2025".to_string(),
-                valor: BigDecimal::from_str("0.8").unwrap(),
-            });
+            let dados = repositorio.get_transacoes(&usuario).await?;
 
             Ok(Html(
                 IndexPage {
                     usuario: usuario.user_name,
                     is_admin: usuario.is_admin,
-                    moedas: dados,
-                    transacoes,
+                    transacoes: dados.clone(),
                 }
                 .render()?,
             )
@@ -72,6 +64,7 @@ struct TransacaoPayload {
     #[serde(deserialize_with = "deserializar_data")]
     pub data: Date,
     pub quantidade: BigDecimal,
+    pub valor_compra: BigDecimal,
 }
 
 async fn post_index(
@@ -87,24 +80,19 @@ async fn post_index(
                 id: payload.id,
                 data: payload.data,
                 quantidade: payload.quantidade,
+                valor_compra: payload.valor_compra,
             };
             let _transacao = repositorio
                 .create_transacao(&usuario, &transacao_create)
                 .await;
 
-            let dados = repositorio.get_moedas().await?;
-            let mut transacoes: Vec<Transacao> = Vec::new();
-            transacoes.push(Transacao {
-                data: "10/10/2025".to_string(),
-                valor: BigDecimal::from_str("0.8").unwrap(),
-            });
+            let dados = repositorio.get_transacoes(&usuario).await?;
 
             Ok(Html(
                 IndexPage {
                     usuario: usuario.user_name,
                     is_admin: usuario.is_admin,
-                    moedas: dados,
-                    transacoes,
+                    transacoes: dados.clone(),
                 }
                 .render()?,
             )

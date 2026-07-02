@@ -6,7 +6,7 @@ function data() {
         isProfileMenuOpen: false,
         modalAberto: false,
         moedaSelecionada: { id: null, nome: '', simbolo: '', valor: '' },
-        moedaTransacaoSelecionada: { id: null, nome: '', valor: '', data: '', quantidade: '' },
+        moedaTransacaoSelecionada: { id: null, nome: '', valor_compra: 0, data: '', quantidade: 0 },
         modoModal: 'alterar',
         abrirModal(id, nome, simbolo, valor) {
             this.modoModal = 'alterar';
@@ -18,8 +18,14 @@ function data() {
             this.moedaSelecionada = { id: null, nome: '', simbolo: '', valor: '' };
             this.modalAberto = true;
         },
-        abrirModalTransacao(id, nome, valor) {            
-            this.moedaTransacaoSelecionada = { id, nome, valor, data: new Date(), quantidade: 1 };
+        abrirModalTransacao(id, nome, valor_compra) {           
+            const d = new Date();
+            const ano = d.getFullYear();
+            const mes = String(d.getMonth() + 1).padStart(2, '0');
+            const dia = String(d.getDate()).padStart(2, '0');
+            const hoje = `${ano}-${mes}-${dia}`;
+            
+            this.moedaTransacaoSelecionada = { id, nome, valor_compra, data: hoje, quantidade: 1 };
             this.modalAberto = true;
         },
         toggleSideMenu() {

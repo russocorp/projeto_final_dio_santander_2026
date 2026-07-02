@@ -15,9 +15,3 @@ pub struct MoedaUpdate {
     pub simbolo: Option<String>,
     pub valor: Option<BigDecimal>,
 }
-
-#[derive(Serialize, Clone, sqlx::FromRow)]
-pub struct Transacao {
-    pub data: String,
-    pub valor: BigDecimal,
-}
