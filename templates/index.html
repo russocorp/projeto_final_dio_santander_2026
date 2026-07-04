@@ -37,8 +37,8 @@
                                     class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
                                     <th class="px-4 py-3">Nome</th>
                                     <th class="px-4 py-3">Símbolo</th>
-                                    <th class="px-4 py-3">Valor</th>
-                                    <th class="px-4 py-3">Quantidade</th>
+                                    <th class="px-4 py-3 text-right">Valor</th>
+                                    <th class="px-4 py-3 text-right">Quantidade</th>
                                     <th class="px-4 py-3 text-right">Diferença</th>
                                     <th class="px-4 py-3"></th>
                                     <th class="px-4 py-3"></th>
@@ -53,9 +53,13 @@
                                 <tr class="text-gray-700 dark:text-gray-400">
                                     <td class="px-4 py-3 text-sm">{{ transacao.nome }}</td>
                                     <td class="px-4 py-3 text-sm">{{ transacao.simbolo }}</td>
-                                    <td class="px-4 py-3 text-sm">R$ {{ transacao.valor|formato_brl }}</td>
+                                    <td class="px-4 py-3 text-sm text-right">R$ {{ transacao.valor|formato_brl }}</td>
+                                    <td class="px-4 py-3 text-sm text-right">{{ transacao.quantidade|formato_brl }}</td>
+                                    <td
+                                        class="px-4 py-3 text-sm text-right {% if transacao.diferenca >= 0 %}text-green-500{% else %}text-red-500{% endif %}">
+                                        R$ {{ transacao.diferenca|formato_brl }}
+                                    </td>
                                     <td class="px-4 py-3 text-sm text-right">
-
                                         {% if transacao.transacoes.0.is_empty() %}
                                         <!-- Caso NÃO tenha transações: Apenas um texto explicativo sem clique -->
                                         <span class="text-xs text-gray-400 dark:text-gray-500 italic pr-5">
@@ -249,12 +253,12 @@
             </div>
 
             <!-- Corpo -->
-            <form @submit.prevent="
+            <form @submit.prevent="                    
                     fetch('/transacao', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            id: moedaTransacaoSelecionada.id,
+                            id: parseFloat(moedaTransacaoSelecionada.id),
                             data: moedaTransacaoSelecionada.data,
                             quantidade: parseFloat(moedaTransacaoSelecionada.quantidade),
                             valor_compra: parseFloat(moedaTransacaoSelecionada.valor_compra)

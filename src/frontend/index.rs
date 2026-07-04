@@ -72,7 +72,6 @@ async fn post_index(
     repositorio: Repositorio,
     Json(payload): Json<TransacaoPayload>,
 ) -> Result<Response, AppError> {
-    //Ok(Redirect::to("/login").into_response())
     match usuario_logado {
         Some(usuario) => {
             // Implementação simples para criar um usuário do tipo administrador.
